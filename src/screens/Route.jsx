@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase, todayLocal, fmt, useLive } from '../supabase'
+import { LoadPlan } from '../components/Gauges'
+import { Gear, Truck, Check, Drop } from '../components/Icons'
 
 const one = (x) => (Array.isArray(x) ? x[0] : x) || null
 const DEMO_COMPANY = '00000000-0000-0000-0000-00000000d001'
@@ -86,47 +88,53 @@ export default function RouteScreen({ profile, go }) {
   }
   const firstShort = stops.find((s) => coverage[s.id] === false)
 
+  const upcoming = stops.filter((s) => s.order.status !== 'delivered')
+    .map((s) => ({ id: s.id, pos: s.pos, gal: s.order.requested_gallons }))
+
   return (
     <div className="screen">
       <header className="top">
-        <div className="row between">
+        <div className="route-head">
           <div>
             <span className="eyebrow">{dateLabel}{truck ? ` · ${truck.name}` : ''}</span>
             <h1>Today's route</h1>
+            {route && stops.length > 0 && (
+              <div className="progress-dots" role="img" aria-label={`${done} of ${stops.length} stops done`}>
+                {stops.map((s) => <i key={s.id} className={s.order.status === 'delivered' ? 'on' : ''} />)}
+              </div>
+            )}
           </div>
           <div className="row">
-            {route && <span className="pill blue">{done} of {stops.length} done</span>}
+            {route && <span className="pill">{done}/{stops.length} done</span>}
             {isManager && (
               <button className="icon ring" aria-label="Company setup and team" onClick={() => go('company')}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+                <Gear size={20} />
               </button>
             )}
           </div>
         </div>
 
         {truck && onTruck && (
-          <div className="panel">
-            <div className="row between small">
-              <span className="muted strong">Water on truck</span>
-              <span className="strong">{fmt(onTruck.level)} / {fmt(truck.capacity_gal)} gal</span>
+          <section className="rig" aria-label="Water on truck">
+            <div className="rig-read">
+              <span className="rig-num">{fmt(onTruck.level)}<small>gal</small></span>
+              <span className="rig-cap">on board<br />of {fmt(truck.capacity_gal)} gal</span>
             </div>
-            <div className="bar" aria-hidden="true">
-              <div style={{ width: `${Math.min(100, (onTruck.level / truck.capacity_gal) * 100)}%` }} />
-            </div>
-            <span className="muted small">
+            {upcoming.length > 0 && <LoadPlan level={onTruck.level} capacity={truck.capacity_gal} stops={upcoming} />}
+            <span className={`rig-msg ${onTruck.loaded === 0 ? 'empty' : firstShort ? 'short' : ''}`}>
               {onTruck.loaded === 0
                 ? 'Log your first fill so the app can track water on board.'
                 : firstShort
-                  ? `Refill before stop ${firstShort.pos}.`
-                  : 'Enough water for the rest of today.'}
+                  ? `Refill before stop ${firstShort.pos}`
+                  : next ? 'Enough water for the rest of today' : 'Route complete'}
             </span>
-          </div>
+          </section>
         )}
       </header>
 
       <main className="list">
-        {loading && <p className="muted pad">Loading route…</p>}
-        {err && <p className="note pad">{err}</p>}
+        {loading && <p className="muted">Loading route…</p>}
+        {err && <p className="note">{err}</p>}
 
         {!loading && !route && isDemo && (
           <div className="empty">
@@ -137,11 +145,12 @@ export default function RouteScreen({ profile, go }) {
         )}
         {!loading && !route && !isDemo && (
           <div className="empty">
+            <Truck size={32} className="muted" />
             <p className="strong">No route for today yet.</p>
             {isManager ? (
               <>
-                <p className="muted small">Finish setting up your company: add a truck, a fill station, and invite your drivers. Building routes comes with the dispatch board.</p>
-                <button className="btn primary" onClick={() => go('company')}>Company setup</button>
+                <p className="muted small">Add a truck, a fill station, and invite your drivers, then build routes from the dispatch board.</p>
+                <button className="btn primary" onClick={() => go('company')}>Set up your company</button>
               </>
             ) : (
               <p className="muted small">When your dispatcher assigns you a route, it shows up here.</p>
@@ -158,12 +167,12 @@ export default function RouteScreen({ profile, go }) {
           if (isDone) {
             return (
               <div key={s.id} className="stop done">
-                <span className="num ok">✓</span>
+                <span className="num ok"><Check size={18} /></span>
                 <div className="grow">
                   <span className="strong strike">{o.customer.full_name}</span>
                   <span className="muted small">
                     {fmt(d?.gallons_delivered)} gal delivered
-                    {d && ` · ${new Date(d.delivered_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
+                    {d && ` at ${new Date(d.delivered_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
                   </span>
                 </div>
               </div>
@@ -175,7 +184,7 @@ export default function RouteScreen({ profile, go }) {
               <span className="num">{s.pos}</span>
               <div className="grow">
                 <span className="strong">{o.customer.full_name}</span>
-                <span className="small sub">{o.is_urgent ? 'Urgent · out of water' : p.address}</span>
+                <span className="small sub">{o.is_urgent ? 'Out of water' : p.address}</span>
                 {isNext && (
                   <span className="tags">
                     {o.status === 'en_route' && <span className="tag blue">On the way</span>}
@@ -186,7 +195,7 @@ export default function RouteScreen({ profile, go }) {
                   </span>
                 )}
               </div>
-              <span className="gal">{fmt(o.requested_gallons)}</span>
+              <span className="gal">{fmt(o.requested_gallons)}<small>gal</small></span>
             </button>
           )
         })}
@@ -194,7 +203,7 @@ export default function RouteScreen({ profile, go }) {
 
       {truck && (
         <footer className="actions two">
-          <button className="btn outline" onClick={() => go('fill', { truck })}>Log a fill</button>
+          <button className="btn outline" onClick={() => go('fill', { truck })}><Drop size={20} />Log a fill</button>
           {next
             ? <button className="btn primary" onClick={() => startStop(next)}>
                 {next.order.status === 'en_route' ? `Continue stop ${next.pos}` : `Start stop ${next.pos}`}

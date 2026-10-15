@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase, fmt } from '../supabase'
 import { joinLink } from '../invite'
+import { Back } from '../components/Icons'
 
 const ROLE_LABEL = { owner: 'Owner', dispatcher: 'Dispatcher', driver: 'Driver', customer: 'Customer' }
 
@@ -13,7 +14,7 @@ export default function CompanyScreen({ profile, onBack }) {
       <header className="top">
         <div className="row">
           <button className="icon" aria-label="Back to route" onClick={onBack}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+            <Back />
           </button>
           <h1>Company</h1>
         </div>

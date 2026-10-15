@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase, todayLocal, fmt, useLive } from '../supabase'
+import { Back } from '../components/Icons'
 import { referralLink } from '../invite'
 
 const money = (n) => `$${Number(n || 0).toFixed(Number(n) % 1 ? 2 : 0)}`
@@ -125,13 +126,13 @@ export default function CustomerPortal({ profile }) {
           <section className="p-card p-tank" aria-label="Tank level">
             <div className="p-gauge" role="img" aria-label={`Tank about ${pct} percent full`}>
               <div className={`p-fill ${level}`} style={{ height: `${pct}%` }} />
-              <i style={{ top: '25%' }} /><i style={{ top: '50%' }} /><i style={{ top: '75%' }} />
+              <i style={{ top: '25%' }} /><i style={{ top: '50%', width: 22 }} /><i style={{ top: '75%' }} />
             </div>
             <div className="p-tank-txt">
-              <span className="p-eyebrow caps">Tank · {fmt(tank.capacity_gal)} gal</span>
+              <span className="p-eyebrow">Your {fmt(tank.capacity_gal)} gal tank</span>
               {est && est.est_days_left != null ? (
                 <>
-                  <span className="p-big">~{days < 1 ? '0' : Math.floor(days)} {Math.floor(days) === 1 ? 'day' : 'days'}</span>
+                  <span className="p-big">{days < 1 ? '<1' : Math.floor(days)}<small>{Math.floor(days) === 1 ? 'day' : 'days'}</small></span>
                   <span className="p-muted">left at your usual pace</span>
                   <span className="p-strong">About {fmt(est.est_level_gal)} gal remaining</span>
                   {days <= 3 && !open && <span className="p-pill warn">Time to order</span>}
@@ -230,7 +231,7 @@ function OrderWater({ tank, est, onDone, onBack }) {
     <div className="portal">
       <header className="p-top start">
         <button className="p-icon" aria-label="Back" onClick={onBack}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+          <Back />
         </button>
         <h1 className="p-h1">Order water</h1>
       </header>

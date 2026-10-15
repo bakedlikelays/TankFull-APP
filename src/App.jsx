@@ -9,6 +9,7 @@ import CompanyScreen from './screens/Company'
 import Board from './screens/Board'
 import Customers from './screens/Customers'
 import ManagerNav from './components/ManagerNav'
+import { Logo } from './components/Gauges'
 import CustomerPortal from './screens/CustomerPortal'
 import Leads from './screens/Leads'
 import { clearPendingInvite, clearPendingReferral } from './invite'
@@ -41,9 +42,9 @@ export default function App() {
 
   useEffect(() => { loadProfile() }, [loadProfile])
 
-  if (!ready) return <div className="screen center muted">Loading…</div>
+  if (!ready) return <Splash />
   if (!session) return <Login />
-  if (profile === undefined) return <div className="screen center muted">Loading…</div>
+  if (profile === undefined) return <Splash />
   if (profile === null) return <Onboarding email={session.user.email} onReady={loadProfile} />
   // Already in a company: a leftover join link no longer applies
   clearPendingInvite()
@@ -85,8 +86,17 @@ function ManagerShell({ profile, current, go, home }) {
 
   return (
     <div className="mshell">
-      <ManagerNav current={current.name} go={go} newLeads={newLeads} />
+      <ManagerNav current={current.name} go={go} newLeads={newLeads} name={profile.full_name} />
       {body}
+    </div>
+  )
+}
+
+function Splash() {
+  return (
+    <div className="screen center" aria-busy="true">
+      <Logo size={56} />
+      <span className="muted">Loading…</span>
     </div>
   )
 }

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase, todayLocal, fmt } from '../supabase'
 import NewOrderForm from '../components/NewOrderForm'
 import { joinLink } from '../invite'
+import { TankMini, levelOf } from '../components/Gauges'
+import { Phone, Plus } from '../components/Icons'
 
 const STATUS = { requested: 'Requested', scheduled: 'Scheduled', en_route: 'En route', delivered: 'Delivered', canceled: 'Canceled' }
 
@@ -44,7 +46,7 @@ export default function Customers() {
           <h1>Customers</h1>
           <span className="muted">{list.length} {list.length === 1 ? 'customer' : 'customers'}</span>
         </div>
-        <button className="btn primary" onClick={() => { setAdding(true); setOpenId(null) }}>+ Add customer</button>
+        <button className="btn primary" onClick={() => { setAdding(true); setOpenId(null) }}><Plus size={20} />Add customer</button>
       </div>
 
       <div className="split">
@@ -61,12 +63,13 @@ export default function Customers() {
             const days = f ? Number(f.est_days_left) : null
             return (
               <button key={c.id} className={`cust ${openId === c.id ? 'on' : ''}`} onClick={() => { setOpenId(c.id); setAdding(false); setEditing(false) }}>
+                {tank ? <TankMini pct={f ? (f.est_level_gal / tank.capacity_gal) * 100 : 0} days={days} /> : <span className="tankmini" aria-hidden="true" />}
                 <div className="grow">
                   <span className="strong">{c.full_name}</span>
                   <span className="small sub">{c.properties[0]?.address || c.phone}</span>
                 </div>
                 {days != null && (
-                  <span className={`chip ${days < 1 ? 'red' : days <= 3 ? 'amber' : ''}`}>{days.toFixed(1)} d</span>
+                  <span className={`chip ${days < 1 ? 'red' : days <= 3 ? 'amber' : ''}`} aria-label={`${days.toFixed(1)} days left`}>{days.toFixed(1)}d</span>
                 )}
               </button>
             )
@@ -79,7 +82,7 @@ export default function Customers() {
             <CustomerForm key={open.id} customer={open} onDone={() => { setEditing(false); load() }} onCancel={() => setEditing(false)} />
           )}
           {!adding && open && !editing && <CustomerDetail customer={open} forecast={forecast} onChanged={load} onEdit={() => setEditing(true)} />}
-          {!adding && !open && <p className="muted">Pick a customer to see their tank and orders, or add a new one.</p>}
+          {!adding && !open && <p className="pick-hint">Pick a customer to see their tank and orders, or add a new one.</p>}
         </section>
       </div>
     </main>
@@ -342,10 +345,10 @@ function CustomerDetail({ customer, forecast, onChanged, onEdit }) {
 
   return (
     <div className="stack tight">
-      <div className="row between">
+      <div className="detail-head">
         <h2>{customer.full_name}</h2>
         <div className="row">
-          <a className="btn ghost sm" href={`tel:${customer.phone}`}>{customer.phone}</a>
+          <a className="btn ghost sm" href={`tel:${customer.phone}`}><Phone size={18} />{customer.phone}</a>
           <button className="btn outline sm" onClick={onEdit}>Edit</button>
         </div>
       </div>
@@ -363,11 +366,16 @@ function CustomerDetail({ customer, forecast, onChanged, onEdit }) {
 
       {tank && (
         <div className="info">
-          <div className="row between">
-            <span className="strong">Tank · {fmt(tank.capacity_gal)} gal</span>
-            {f && <span className={`chip ${Number(f.est_days_left) < 1 ? 'red' : Number(f.est_days_left) <= 3 ? 'amber' : ''}`}>~{Number(f.est_days_left).toFixed(1)} days left</span>}
+          <div className="tank-wide">
+            <TankMini pct={f ? (f.est_level_gal / tank.capacity_gal) * 100 : 0} days={f ? Number(f.est_days_left) : null} />
+            <div className="grow">
+              <span className="strong">{fmt(tank.capacity_gal)} gal tank</span>
+              {f
+                ? <span className="small sub">About {fmt(f.est_level_gal)} gal left (estimate)</span>
+                : <span className="small sub">Estimate starts after the first delivery</span>}
+            </div>
+            {f && <span className={`chip ${levelOf(Number(f.est_days_left)) === 'dry' ? 'red' : Number(f.est_days_left) <= 3 ? 'amber' : ''}`}>~{Number(f.est_days_left).toFixed(1)} days left</span>}
           </div>
-          {f && <span className="small sub">About {fmt(f.est_level_gal)} gal left (estimate)</span>}
           <div className="row">
             <label className="field inline"><span>Uses per day (gal)</span>
               <input inputMode="numeric" value={usage} onChange={(e) => setUsage(e.target.value.replace(/\D/g, ''))} onBlur={saveUsage} /></label>
@@ -384,7 +392,7 @@ function CustomerDetail({ customer, forecast, onChanged, onEdit }) {
           onDone={() => { setOrdering(false); loadOrders(); onChanged() }}
         />
       ) : (
-        <button className="btn primary" onClick={() => setOrdering(true)}>New order</button>
+        <button className="btn primary" onClick={() => setOrdering(true)}><Plus size={20} />New order</button>
       ))}
 
       <PortalInvite customer={customer} />

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase, todayLocal, fmt, useLive } from '../supabase'
 import NewOrderForm from '../components/NewOrderForm'
+import { TankMini } from '../components/Gauges'
+import { Back, Truck, Chat, Plus } from '../components/Icons'
+
+const shift = (d, n) => { const x = new Date(`${d}T12:00:00`); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10) }
 
 const one = (x) => (Array.isArray(x) ? x[0] : x) || null
 const LOW_DAYS = 5
@@ -87,10 +91,13 @@ export default function Board({ profile }) {
           <h1>Dispatch board</h1>
           <span className="muted">{dateLabel}</span>
         </div>
-        <label className="field inline">
-          <span>Route date</span>
-          <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
-        </label>
+        <div className="datebar">
+          <button className="icon" aria-label="Previous day" onClick={() => setDate(shift(date, -1))}><Back size={20} /></button>
+          <label><span className="sr-only">Route date</span>
+            <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></label>
+          <button className="icon" aria-label="Next day" onClick={() => setDate(shift(date, 1))}><Back size={20} style={{ transform: 'scaleX(-1)' }} /></button>
+          {date !== todayLocal() && <button className="today" onClick={() => setDate(todayLocal())}>Today</button>}
+        </div>
       </div>
       {err && <p className="note">{err}</p>}
       {loading && <p className="muted">Loading…</p>}
@@ -99,10 +106,10 @@ export default function Board({ profile }) {
         {/* -------- Running low -------- */}
         <section className="col" aria-labelledby="low-h">
           <div className="col-head">
-            <h2 id="low-h">Running low</h2>
-            <span className="small muted">≤ {LOW_DAYS} days, no order yet</span>
+            <div><h2 id="low-h">Running low</h2>{low.length > 0 && <span className={`count ${low.some((t) => Number(t.est_days_left) < 1) ? 'hot' : ''}`}>{low.length}</span>}</div>
+            <span className="small muted">{LOW_DAYS} days or less, no order</span>
           </div>
-          {!loading && low.length === 0 && <p className="muted small">Nobody is close to running dry.</p>}
+          {!loading && low.length === 0 && <p className="col-empty">Nobody is close to running dry.</p>}
           {low.map((t) => {
             const c = t.property.customer
             const days = Number(t.est_days_left)
@@ -110,7 +117,8 @@ export default function Board({ profile }) {
             const sms = `sms:${c.phone}?&body=${encodeURIComponent(`Hi ${c.full_name}, your water tank is probably getting low. Want us to schedule a delivery?`)}`
             return (
               <div key={t.tank_id} className="item">
-                <div className="row">
+                <div className="lowrow">
+                  <TankMini pct={(t.est_level_gal / t.capacity_gal) * 100} days={days} />
                   <div className="days">
                     <span className={`days-n ${days < 1 ? 'red' : days <= 3 ? 'amber' : ''}`}>{days.toFixed(1)}</span>
                     <span className="small muted">days</span>
@@ -129,8 +137,8 @@ export default function Board({ profile }) {
                   />
                 ) : (
                   <div className="row two">
-                    <a className="btn ghost sm" href={sms}>Text reminder</a>
-                    <button className="btn outline sm" onClick={() => setOrderFor(t.tank_id)}>Create order</button>
+                    <a className="btn ghost sm" href={sms}><Chat size={18} />Text reminder</a>
+                    <button className="btn outline sm" onClick={() => setOrderFor(t.tank_id)}><Plus size={18} />Create order</button>
                   </div>
                 )}
               </div>
@@ -141,10 +149,10 @@ export default function Board({ profile }) {
         {/* -------- Requests -------- */}
         <section className="col" aria-labelledby="req-h">
           <div className="col-head">
-            <h2 id="req-h">Requests</h2>
+            <div><h2 id="req-h">Requests</h2>{requests.length > 0 && <span className={`count ${requests.some((o) => o.is_urgent) ? 'hot' : ''}`}>{requests.length}</span>}</div>
             <span className="small muted">Not on a route yet</span>
           </div>
-          {!loading && requests.length === 0 && <p className="muted small">No open requests.</p>}
+          {!loading && requests.length === 0 && <p className="col-empty">No open requests. New ones land here.</p>}
           {requests.map((o) => (
             <div key={o.id} className={`item ${o.is_urgent ? 'urgent' : ''}`}>
               <div className="row between">
@@ -175,10 +183,10 @@ export default function Board({ profile }) {
         {/* -------- Routes -------- */}
         <section className="col" aria-labelledby="rt-h">
           <div className="col-head">
-            <h2 id="rt-h">Routes</h2>
-            <span className="small muted">{dateLabel}</span>
+            <div><h2 id="rt-h">Routes</h2><span className="count">{routes.reduce((n, r) => n + r.route_stops.length, 0)}</span></div>
+            <span className="small muted">{trucks.length} {trucks.length === 1 ? 'truck' : 'trucks'}</span>
           </div>
-          {trucks.length === 0 && <p className="muted small">Add a truck in Company → Setup to start building routes.</p>}
+          {trucks.length === 0 && <p className="col-empty">Add a truck in Company, Setup to start building routes.</p>}
           {trucks.map((t) => {
             const rt = routeByTruck[t.id]
             const stops = rt?.route_stops || []
@@ -187,9 +195,20 @@ export default function Board({ profile }) {
             return (
               <div key={t.id} className="truck">
                 <div className="truck-head">
-                  <span className="strong">{t.name}</span>
-                  <span className="small">{fmt(total)} gal · {loads} {loads === 1 ? 'load' : 'loads'}</span>
+                  <span className="strong"><Truck size={20} />{t.name}</span>
+                  <span className="small muted">{fmt(total)} gal, {loads} {loads === 1 ? 'load' : 'loads'}</span>
                 </div>
+                {total > 0 && (
+                  <div className="truck-load" aria-hidden="true">
+                    <div className="loadbar">
+                      {Array.from({ length: loads }, (_, i) => {
+                        const inLoad = Math.min(t.capacity_gal, total - i * t.capacity_gal)
+                        return <i key={i} className={i > 0 ? 'over' : ''} style={{ flex: inLoad }} />
+                      })}
+                      {total % t.capacity_gal !== 0 && <span style={{ flex: t.capacity_gal - (total % t.capacity_gal) }} />}
+                    </div>
+                  </div>
+                )}
                 {rt && (
                   <label className="driver-pick">
                     <span className="small muted">Driver</span>
@@ -199,7 +218,7 @@ export default function Board({ profile }) {
                     </select>
                   </label>
                 )}
-                {stops.length === 0 && <p className="muted small pad-s">No stops. Add requests from the middle column.</p>}
+                {stops.length === 0 && <p className="muted small pad-s">No stops yet. Add requests to this truck.</p>}
                 <ol className="stops">
                   {stops.map((s, i) => {
                     const o = s.order

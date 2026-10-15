@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import { pendingInvite, clearPendingInvite, pendingReferral } from '../invite'
 import FindWater, { RequestStatus } from './FindWater'
+import { Back, Drop, Gate, Truck } from '../components/Icons'
+import { Logo } from '../components/Gauges'
 
 const OPEN = ['new', 'contacted']
 
@@ -62,22 +64,26 @@ export default function Onboarding({ email, onReady }) {
     return (
       <div className="screen">
         <header className="top">
+          <Logo size={44} />
+          <h1>How will you use TankFull?</h1>
           <span className="eyebrow">Signed in as {email}</span>
-          <h1>Welcome to TankFull</h1>
         </header>
         <main className="stack pad">
           {declined && (
             <p className="note">{declined.company_name} couldn't take your request. Try another hauler below.</p>
           )}
           <button className="choice big" onClick={() => setMode('water')}>
+            <span className="choice-ico"><Drop /></span>
             <span className="strong">I need water delivered</span>
             <span className="small sub">Find a hauler in your area and request service</span>
           </button>
           <button className="choice big" onClick={() => setMode('join')}>
+            <span className="choice-ico"><Gate /></span>
             <span className="strong">I have an invite code</span>
             <span className="small sub">From your water company, or from your employer if you drive or dispatch</span>
           </button>
           <button className="choice big" onClick={() => setMode('create')}>
+            <span className="choice-ico"><Truck /></span>
             <span className="strong">I run a water hauling company</span>
             <span className="small sub">Set up your company, trucks and team</span>
           </button>
@@ -91,7 +97,7 @@ export default function Onboarding({ email, onReady }) {
     <div className="screen">
       <header className="top row">
         <button className="icon" aria-label="Back" onClick={() => { setMode(null); setErr('') }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+          <Back />
         </button>
         <h1>{mode === 'create' ? 'Set up your company' : 'Enter your invite code'}</h1>
       </header>

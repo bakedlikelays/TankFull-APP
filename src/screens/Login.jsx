@@ -43,10 +43,14 @@ export default function Login() {
 
   return (
     <div className="screen">
-      <header className="top login-top">
-        <img src="/icons/icon-192.png" alt="" width="56" height="56" className="login-icon" />
+      <header className="hero">
+        <svg width="64" height="64" viewBox="0 0 32 32" aria-hidden="true" className="logo">
+          <rect width="32" height="32" rx="8" fill="var(--water)" />
+          <path d="M9 9.5c0-1.4 3.1-2.5 7-2.5s7 1.1 7 2.5v13c0 1.4-3.1 2.5-7 2.5s-7-1.1-7-2.5z" fill="none" stroke="var(--ink)" strokeWidth="2.2" />
+          <path className="hero-fill" d="M9 16.5c2.4 1.3 4.6-1 7 0s4.6 1.3 7 0v6c0 1.4-3.1 2.5-7 2.5s-7-1.1-7-2.5z" fill="var(--ink)" />
+        </svg>
         <h1>TankFull</h1>
-        <span className="eyebrow">For water haulers, their drivers and customers</span>
+        <p>Routes, fills, and tank levels for water haulers, their drivers, and the people they deliver to.</p>
       </header>
       <form className="stack pad" onSubmit={submit}>
         {invite && (

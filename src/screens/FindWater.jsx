@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase, fmt } from '../supabase'
+import { Back as BackIcon } from '../components/Icons'
 import { pendingReferral, clearPendingReferral } from '../invite'
 
 const Back = ({ onClick }) => (
   <button className="p-icon" aria-label="Back" onClick={onClick}>
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+    <BackIcon />
   </button>
 )
 

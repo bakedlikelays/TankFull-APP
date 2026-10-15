@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, uploadPhoto } from '../supabase'
+import { Back, Camera, Check } from '../components/Icons'
 
 export default function FillLogScreen({ profile, truck, onDone }) {
   const [stations, setStations] = useState([])
@@ -42,7 +43,7 @@ export default function FillLogScreen({ profile, truck, onDone }) {
     <div className="screen">
       <header className="top row">
         <button className="icon" aria-label="Back to route" onClick={onDone}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+          <Back />
         </button>
         <div>
           <span className="eyebrow">{truck?.name}</span>
@@ -75,7 +76,7 @@ export default function FillLogScreen({ profile, truck, onDone }) {
 
         <label className={`btn photo ${ticket ? 'has' : ''}`}>
           <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => setTicket(e.target.files?.[0] || null)} />
-          {ticket ? 'Ticket photo added ✓' : 'Snap the fill ticket'}
+          {ticket ? <><Check />Ticket photo added</> : <><Camera />Snap the fill ticket</>}
         </label>
 
         <p className="muted small">Each fill is saved with the truck, driver and time, so your permit records build themselves.</p>
@@ -84,7 +85,7 @@ export default function FillLogScreen({ profile, truck, onDone }) {
 
       <footer className="actions">
         <button className="btn primary big" disabled={busy || !gallons || !stationId} onClick={save}>
-          {busy ? 'Saving…' : 'Save fill'}
+          {busy ? 'Saving…' : gallons ? `Save ${Number(gallons).toLocaleString('en-US')} gal fill` : 'Save fill'}
         </button>
       </footer>
     </div>

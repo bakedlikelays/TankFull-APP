@@ -107,3 +107,13 @@ Invite codes are single-use and expire after 14 days. Cancelling one expires it 
 - `src/screens/Stop.jsx` – access notes, navigate / text ETA, gallons, photo, mark delivered
 - `src/screens/FillLog.jsx` – station, gallons, cost, ticket photo
 - `src/supabase.js` – client, Arizona date helper, photo upload (private `photos` bucket)
+
+## Design preview (no database needed)
+
+`.preview/` runs the app against built-in sample data, so you can look at every screen without signing in or touching Supabase:
+
+```bash
+npx vite --config .preview/vite.config.js      # then open http://localhost:5199/?as=driver
+```
+
+Use `?as=owner`, `driver`, `customer`, `new` (onboarding) or `out` (login). `python3 .preview/shots.py` screenshots every screen into `.preview/shots/` (needs Playwright).

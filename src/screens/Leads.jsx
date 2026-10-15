@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase, fmt, useLive } from '../supabase'
 import { CustomerForm } from './Customers'
+import { Phone, Chat } from '../components/Icons'
 
 const SOURCE = { directory: 'Found you in TankFull', referral: 'Referral' }
 const ago = (t) => {
@@ -98,8 +99,8 @@ export default function Leads({ goCustomers }) {
                 {l.notes && <span className="small">“{l.notes}”</span>}
               </div>
               <div className="row two">
-                <a className="btn ghost sm" href={`tel:${l.phone}`} onClick={() => l.status === 'new' && setStatus(l.id, 'contacted')}>Call</a>
-                <a className="btn ghost sm" href={sms} onClick={() => l.status === 'new' && setStatus(l.id, 'contacted')}>Text</a>
+                <a className="btn ghost sm" href={`tel:${l.phone}`} onClick={() => l.status === 'new' && setStatus(l.id, 'contacted')}><Phone size={18} />Call</a>
+                <a className="btn ghost sm" href={sms} onClick={() => l.status === 'new' && setStatus(l.id, 'contacted')}><Chat size={18} />Text</a>
               </div>
               <button className="btn primary sm" onClick={() => setConverting(l)}>Add as customer</button>
               <button className="btn link sm danger" onClick={() => window.confirm(`Decline ${l.full_name}'s request? They'll be told you can't take it and can pick another hauler.`) && setStatus(l.id, 'declined')}>

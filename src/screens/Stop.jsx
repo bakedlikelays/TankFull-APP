@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase, uploadPhoto, fmt } from '../supabase'
+import { Back, Nav, Chat, Camera, Check, Dog, Road } from '../components/Icons'
 
 export default function StopScreen({ profile, stop, truck, onDone }) {
   const o = stop.order
@@ -43,33 +44,30 @@ export default function StopScreen({ profile, stop, truck, onDone }) {
   return (
     <div className="screen">
       <header className="top row">
-        <button className="icon" aria-label="Back to route" onClick={onDone}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
-        </button>
-        <div>
-          <span className="eyebrow">Stop {stop.pos}{o.is_urgent ? ' · Urgent' : ''}</span>
+        <button className="icon" aria-label="Back to route" onClick={onDone}><Back /></button>
+        <div className="grow">
+          <span className="eyebrow">Stop {stop.pos}{o.is_urgent ? ', out of water' : ''}</span>
           <h1>{o.customer.full_name}</h1>
         </div>
       </header>
 
       <main className="stack pad">
-        <div className="row two">
-          <a className="btn dark" href={mapsUrl} target="_blank" rel="noreferrer" onClick={onTheWay}>Navigate</a>
-          <a className="btn dark" href={smsUrl} onClick={onTheWay}>Text ETA</a>
+        <div className="quick">
+          <a className="btn dark" href={mapsUrl} target="_blank" rel="noreferrer" onClick={onTheWay}><Nav />Navigate</a>
+          <a className="btn dark" href={smsUrl} onClick={onTheWay}><Chat />Text ETA</a>
         </div>
 
-        <section className="card light">
-          <span className="eyebrow dark">Before you pull in</span>
-          <p className="strong">{p.address}</p>
-          <div className="row two">
+        <section className="card light" aria-label="Access details">
+          <span className="addr">{p.address}</span>
+          <div className="access-grid">
             <div><span className="label">Gate code</span><span className="big-num">{p.gate_code || '—'}</span></div>
             <div><span className="label">Hose run</span><span className="big-num">{p.hose_length_ft ? `${p.hose_length_ft} ft` : '—'}</span></div>
           </div>
           {p.access_notes && <p>{p.access_notes}</p>}
           {(p.dogs_on_property || p.road_condition) && (
             <span className="tags">
-              {p.dogs_on_property && <span className="tag warn">Dogs on property</span>}
-              {p.road_condition && <span className="tag">{p.road_condition}</span>}
+              {p.dogs_on_property && <span className="tag warn"><Dog size={14} />Dogs on property</span>}
+              {p.road_condition && <span className="tag"><Road size={14} />{p.road_condition}</span>}
             </span>
           )}
         </section>
@@ -82,12 +80,15 @@ export default function StopScreen({ profile, stop, truck, onDone }) {
               onChange={(e) => setGallons(Math.max(0, parseInt(e.target.value.replace(/\D/g, '') || '0', 10)))} />
             <button type="button" aria-label="Add 100 gallons" onClick={() => setGallons((g) => g + 100)}>+</button>
           </div>
-          <span className="muted small">Ordered {fmt(o.requested_gallons)} gal</span>
+          <span className="muted small">
+            Ordered {fmt(o.requested_gallons)} gal
+            {gallons !== o.requested_gallons && gallons > 0 && ` · ${gallons > o.requested_gallons ? '+' : '−'}${fmt(Math.abs(gallons - o.requested_gallons))}`}
+          </span>
         </div>
 
         <label className={`btn photo ${photo ? 'has' : ''}`}>
           <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
-          {photo ? 'Tank photo added ✓' : 'Add tank photo'}
+          {photo ? <><Check />Tank photo added</> : <><Camera />Add tank photo</>}
         </label>
 
         <label className="field">
@@ -100,7 +101,7 @@ export default function StopScreen({ profile, stop, truck, onDone }) {
 
       <footer className="actions">
         <button className="btn primary big" disabled={busy || gallons <= 0} onClick={deliver}>
-          {busy ? 'Saving…' : 'Mark delivered'}
+          {busy ? 'Saving…' : `Mark ${fmt(gallons)} gal delivered`}
         </button>
       </footer>
     </div>
